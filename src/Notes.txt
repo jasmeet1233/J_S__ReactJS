@@ -1,0 +1,1113 @@
+if we want to go to the js world, we just use the {}, now with style attribute, say you want ot give an inline style, but that is html, but its possible in react, you need to give a object to the style attribute, so it will be like, style = {{color:'red'}}.....etc
+
+we can import a component and name it anything when importing somewhere as the location should be specified, as a component just returns jsx.
+
+Why use useState?
+function App() {
+  let title = "random title";
+
+  const clickhandler = () => {
+    title = 'changed title'
+    console.log(title);
+  };
+
+  return (
+    <React.Fragment>
+      <h2>{title}</h2>
+      <button type="button" onClick={clickhandler} className="btn">
+        Change title
+      </button>
+    </React.Fragment>
+  );
+}
+
+so in this eg. we changed the title , but it didnt get rendrerd on the screen , cause there was no re-render.
+
+
+General rules of hooks:
+You cannot call a hook conditionally ie inside a if{} directly
+
+
+Changing object state, using spread operator and putting the updated value.
+
+HOOKS are Asynchronus!!!!!!
+ie 
+function App() {
+  const [count, setCount] = useState(0);
+
+  const clickhandler = () => {
+    console.log(count);
+    setCount(count + 1)
+    console.log(count)
+  };
+
+  return (
+    <React.Fragment>
+      <h2>Counter</h2>
+      <div>{count}</div>
+      <button onClick={clickhandler} className="btn">
+        Increase
+      </button>
+    </React.Fragment>
+  );
+}
+
+in the console, you can see the 2nd log is still the old value, cause re-renders in the background, ie state hook is Asynchronus function!!
+but the above way of updating stuff is not safe..
+
+Now, we know setcount takes the updated value as func paramerter and update the state,
+but it also takes a function , and it automatically gives that callback function the current/updated value of the state
+
+function App() {
+  const [count, setCount] = useState(0);
+
+  const clickhandler = () => {
+    console.log(count);
+    setCount(prevCount => {
+      console.log(prevCount)
+      return prevCount + 1
+    })
+    console.log(count)
+  };
+
+  return (
+    <React.Fragment>
+      <h2>Counter</h2>
+      <div>{count}</div>
+      <button onClick={clickhandler} className="btn">
+        Increase
+      </button>
+    </React.Fragment>
+  );
+}
+
+now thw above is safer, cause it is actually getting the current value, but whats the diff really, lets say you want to increase a number by 5
+
+function App() {
+  const [count, setCount] = useState(0);
+
+  const increaseBy5 = () => {
+    for(let i = 0; i<5; i++){
+      setCount(count + 1)
+    }
+  }
+
+  return (
+    <React.Fragment>
+      <h2>Counter</h2>
+      <div>{count}</div>
+      <button onClick={clickhandler} className="btn">
+        Increase
+      </button>
+      <button onClick = {increaseBy5}>increase by 5</button>
+    </React.Fragment>
+  );
+}
+
+Now if you do this, it will only show 1 on the screen, cause increaseby5 function , and we are just looping 5 times to call the setCount, but its getting the old value ie 0 evertime, now there are 2 reason 1st can be setCount is a asyn hook, and 2nd maybe cause of closures.
+
+so we just use a function as discussed before which gets a updated value as a parameter in setState func
+  const increaseBy5 = () => {
+    for(let i = 0; i<5; i++){
+      setCount((currValue) => currValue+1)
+    }
+  }
+
+so , using a function inside a setState is always safer
+
+So bsically agar ek barr karrna hai toh simply the 1st method would work, and if i want to update the state more than once and one after the wach other then , we need to provide the fresh value using 2nd method
+
+useEffect:
+
+useEffect Basics:
+now usestate preserves the state and trigerrs a re-render. 
+now after every state update the useeffct func will run , as the component func got re-run.
+
+it allows you to do side-effects, which means it allows you to do wotk outside of the compnent, like fetching data, changing document title, cause its just like a normal js func
+
+we pass a callback func in the useeffect hook as a parameter, and that callback will run after every render
+
+now by default useEffect runs on every rnder.
+function App() {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    console.log("call use effect");
+    document.title = `${value} new messages`
+  });
+  console.log("render component");
+
+  return (
+    <>
+      <h2>{value}</h2>
+      <button onClick={() => setValue(value + 1)}>Click me</button>
+    </>
+  );
+}
+
+
+
+useEffect COnditional:
+
+now what if i want to only show the documents as new message if i have more than 0 messages.
+one might think, we can do, like 
+if(value > 0){useEffe....}, right?
+but as discussed previosly , we can use hooks inside conditionals and will throw error.
+
+so we can just do the foll:
+  useEffect(() => {
+    console.log("call use effect");
+    if(value > 0){
+      document.title = `${value} new messages`;
+    }
+
+
+useState- dependency list
+
+now there is second parameter, we can pass a array, and that is array of dependencies, or list of dependencies, and if its black which means it will only run on initial render.
+
+  useEffect(() => {
+    console.log("call use effect");
+    if(value > 0){
+      document.title = `${value} new messages`;
+    }
+  }, []);
+
+the document title wont change, as it runs only on initial render. and how many render take place it wont wont run again if empty array
+
+can we add stuff in there?
+maybe i want it to run , when there is a change in some value..
+in our case , we take the value variable as the dependency
+
+  useEffect(() => {
+    console.log("call use effect");
+    if(value > 0){
+      document.title = `${value} new messages`;
+    }
+  }, [value])
+
+now the useEffect runs, when the value is updated., cause we changes something about that dependency `value`, so each and every time a value is changed, it will trigger the useEffect.
+so basically useEffects observers the dependency, and when the page re-render, it sees if the there is change in value, if yes, it runs
+
+
+
+useEffect - CleanUp function
+basically we want to make a cleanup function, where in the callfunc we return something which we wanto to clean, or which we dont want after some tume.
+
+
+
+useEffect - Fetch data
+if you are triggering useRender make sure that you pass the second argument in the useEffect, cause it will cause infinite loop.
+
+
+
+useEffect - Multiple returns and conditional rendering
+Catch , cathes the erorr if there is network issue, right? but what if there is no such user, ie if there is a 404 error, so in that case we check the response we got 
+.json() is like a white flag , to use the main data we want in `then`
+function App() {
+  const url = "https://api.github.com/users/mojombo";
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [user, setUser] = useState("default user");
+
+  useEffect(() => {
+    fetch(url)
+      .then((response) => {
+        if (response.status >= 200 && response.status < 299) {
+          return response.json();
+        } else {
+          setIsLoading(false);
+          setIsError(true);
+          throw new Error(response.statusText);
+        }
+      })
+      .then((data) => {
+        const { name } = data;
+        setUser(name);
+        setIsLoading(false);
+      })
+      .catch((err) => console.log(err));
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div>
+        <h1>Loading...</h1>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div>
+        <h1>Error!</h1>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1>{user}</h1>
+    </div>
+  );
+}
+
+
+
+Short  circuit:
+Now we know that in jsx we use js by{}, and that has to return stuff, so we can use function, mao or anythong that return something, but we cant use a if statement, cause it aint a function and cant return stuff.
+
+but what if i want to show 1 thing if some ondition is fulfilled.
+
+as we know a empty string is a falsy valur.
+so when we || (or) it return the true value, and && it returns false if one is false, and if all true returns last true value.
+
+function App() {
+  const [text, setText] = useState('');
+  const firstValue = text || 'hello world'
+  const secondValue = text && 'hello world'
+
+  return(
+    <>
+    <h1>{firstValue}</h1>
+    <h1>value: {secondValue}</h1>
+    </>
+  )
+}
+
+
+Usage of ternary operator:
+function App() {
+  const [isError, setIsError] = useState(false);
+
+  return (
+    <>
+      {isError && <h1>Error...</h1>}
+      {isError ? <h1>yhere is a error</h1> : <h1>there is no error</h1>}
+      <button onClick={() => setIsError(!isError)}>toggle error</button>
+    </>
+  );
+}
+
+there are 2 example above , both have conditional returns.
+
+you can use cleanup functions to basically reverse what you did in useeffect, or you can do .
+A cleaner function is important to remove event listner, 
+now this become important and is recomended to have a cleanup function .
+function App() {
+  const [show, setShow] = useState(false);
+  
+  const showHandler = () => {
+    setShow(!show)
+  }
+
+  return (
+    <>
+      <button onClick = {showHandler} >show/hide</button>
+      {show && <Item />}
+    </>
+  );
+}
+
+function Item() {
+  const [size, setSize] = useState(window.innerWidth);
+
+  const checkSize = () => {
+    setSize(window.innerWidth);
+  };
+
+  useEffect(() => {
+    window.addEventListener("resize", checkSize);
+    return () => {
+        window.removeEventListener('resize', checkSize)
+    }
+  }, []);
+  return (
+    <>
+      <h3>size: {size}</h3>
+    </>
+  );
+}
+
+
+
+Forms:
+
+Dynamic object values:
+
+now say you want a object property to a name which you had assigned, 
+Eg:
+let a = 'jas'
+const obj = {[a]: 'fullname', z:'ratra'}
+console.log(obj)
+
+returns -> {jas: "fullname", z: "ratra"}
+
+now as you saw, we used [] to dynamically give the `a` as 'jas` value to the object.
+
+So this feature can be used in forms where we have muliple inputs to update the state.
+ return (
+    <article>
+      <form className="form" onSubmit={submitHandler}>
+        <div className="form-control">
+          <label htmlFor="firstName">Name</label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            value={person.firstName}
+            onChange={changeHandler}
+          />
+        </div>
+        <div className="form-control">
+          <label htmlFor="email">email</label>
+          <input
+            type="text"
+            id="email"
+            name="email"
+            value={person.email}
+            onChange={changeHandler}
+          />
+        </div>
+        <div className="form-control">
+          <label htmlFor="age">Age</label>
+          <input
+            type="text"
+            id="age"
+            name="age"
+            value={person.age}
+            onChange={changeHandler}
+          />
+        </div>
+        <button type="submit">Submit</button>
+      </form>
+      {people.map((peopleObj) => {
+        return (
+          <div className="item" key={peopleObj.id}>
+            <h4>{peopleObj.firstName}</h4>
+            <p>{peopleObj.email}</p>
+          </div>
+        );
+      })}
+    </article>
+  );
+}
+
+The updation of object form of state is nothing , but, just copy paste the obj, then onchange we give the property the new value, so the old peroperty gets replaced and update the stuff.
+
+
+
+useEffect: (go down at ---imp)
+
+For conditionally rendering an effect we pass a second paramerter.
+its an array.
+And in that array we need to specifiy either props or state we need to watch for, only if those props or state were changed the effect will be executed.
+
+So , say we have a effect in a component, but we want to to run that only on a certain condition, change in list, or something.
+
+ Cleanup Function :
+  when we use useEffect hook in a component, which is to be included in app.jsx, and we conditionally call the component, so now we need a cleanup function , cause lets take an example,
+  when something is true that component is rendered and useEffect runs, now that functions adds a eventlistner to a button, lets say.
+  the next time the condition changes and that component isnt rendered , but lets say in future it is rendered multple times, so that will keep adding multiple same eventlistner to the same button, so we have a cleanup, which basically cleans what we did, like .
+
+
+  As soon as the useffect realizes that the compoennt i am in is of no use or its not being rendered but previosly was it will run the clean up function.
+  App:
+  function App() {
+  const [status, setStatus] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setStatus(!status)}>Change Status</button>
+      {status && <Item />}
+    </div>
+  );
+}
+
+Item :
+function Item() {
+  useEffect(() => {
+    console.log('render')
+    document.title = 'render'
+    return (
+      () => {
+        document.title = 'Cleaned up'
+        console.log('cleaned up')
+      }
+    )
+  },[])
+
+  return <div>I can be seen as status is true</div>
+}
+
+--------------------------------- imp useEffect ----------------
+
+The empty array, is for like run it for the first render, now, basically it tells react, if a component is rendered for the first time, or if the component is activated for the first time, run that, now the component might not render later, so it gets deactivated, and again if the component later is rendered it is activated again , so the useeffect will run again as the component is rendered for the first time. ie it will like it was deactivated before.
+
+Rule : every single useEffect always fires on the first render. (no matter have/dont have dependency)
+
+
+Cleanup Function:
+Before any re-render of that compoennt, useEffect quickly unmounts the component, before it can render the other one, ie updated one. So before any render, it will first disconnect the component, or run the cleanup, and will render the new stuff we bring in.
+
+Imp : function to undo our stuff from above when component unmounts
+
+If you need to clean up your side effect on unmount, return a function that contains that code.
+
+useEffect dependency, we can also put it like this, when  a component comes to dom, useeffect sees it as the first time rendering, as it in in the dom, so it runs, when we have [] as a dependency.
+
+so we can say that, when a component is in the dom, or in react  dev tools we see that compoennt, which means it is live/activated, and useEffect will run whener that happens havinga  [] dependency, cause it will be like render-for-the-1st-time. for it, cause dom mai aya aka render kiya.
+
+
+
+About the Grocery Bud project details:
+so in our grocery example, when we used useeffect to remove the alert using settimeout.
+cause we gave effect on first render, what was the first render doing after 3 sec alert component will be out of DOM., so it will be switched of, deactiveted, now if we add/remove/edit, a alert will be shown again, and that compoennt, will run other 3sec,
+now the effect function , is a func just to remove that component, nothing else, so the values, can change and re-render, withing that 3sec, after that the fun deactivated/removed the component outside DOM,
+
+We also know , if we have a q of setTimeouts, each and everyone runs one after each other
+
+so in that case , comes our cleanup function,
+a cleanup func runs evertime before the render of the component, then the components loads, and then the callback func of useEffect runs
+for a conditional component
+The above happens when the component is still in DOM, ie we are calling rendering that component again and again,
+but the cleanup fun will run after the component is out of the Dom, so kind of removes all eventhandlerrs....etc
+Cause the task of a cleanup function is to detach whatever was attached before and produce a new for a incoming req
+So when a component goes off dom, an id called later, will have a new vallue/new attachment
+where the cleanup func removes that setimeout from the q before a re-render happens of that component, which means there will be only onesetimeout, of the last button we clicked
+we also changed the dependency, to the list(contains the item), so if the list changes, there will be an alert, so there will use of useEffect everytime caused by change in dependency and so evertime that useEffect will fire ro remove that alert also that cleanup will remove it if there is again change, so again re-render, so befrore re-render cleanUP!
+
+we could have changed to no dependecy , cause if that alert component is allowed to show in dom which means there is a alert of some kind and we will need that useEffect to remove that alert, so having no dependency would have worked too.
+
+So always use cleanup func when using Timers, event listners.
+
+useEffect func, is just like a JS functions, you can use it anywhere, BUT we know that useEffect always run on the first render so if you , lets say paasing a useEffect in a app.jsx to change something, which is done by other component so you better use that in that compoennt, cause there will a timer function already running without any purpose.
+
+--------------------------------------------------------------
+
+useRef:
+its like a global object, there are situation when we needa  value of the current state, but not update it, (as we know we get curr state value using a callback func which is used in setState, but we dont want to update stuff. we just need the value of the current state.)
+
+Refs exist outside of the re-render cycle.
+
+Think of refs as a variable you’re setting to the side. When your component re-runs it happily skips over that ref until you call it somewhere with .current.
+
+The hook useRef() in React returns an object that has a property current that we can access as we do with objects. This property is initialized to the passed argument in the function useRef() . The returned object will persist for the full lifetime of the component.
+The hook useRef() accepts one argument, which is the value to initialize the property current in the returned object.
+Eg.
+  const myObj = useRef(69)
+  console.log(myObj)
+
+First off, there are two main uses for the useRef hook in a React functional component: accessing a DOM element and storing mutable information in the state without triggering a re-render of that component. We will take a look at an example of both of these and discuss some things to keep in mind along the way.
+
+so useRef is like a value, which is maintained no matter how many renders takes place, so we can use it evertime, (doest matter if the hooks run after/before render) , cause the mainted value is what we are looking for
+
+function App() {
+  const countRef = useRef(0);
+  const [value, setValue] = useState(0)
+
+  const handle = () => {
+    countRef.current++;
+    console.log(`Clicked ${countRef.current} times`);
+  };
+
+  console.log("I rendered!");
+
+  return (
+    <div>
+      <button onClick={handle}>Click me</button>
+      <button onClick = {() => setValue(value + 1)}>Increase Value</button>
+    </div>
+  );
+}
+
+In the above Eg, we can see that after click `click me` button few times, and then i click increase value btn which cause re-render, but after again clicking the btn , we see that the value is same of obf, ie useref is maintained event after re-render.
+
+so whats the differnce in useRef and useState?
+Let’s reuse the component LogButtonClicks from the previous section, but this time use useState() hook to count the number of button clicks:
+
+import { useState } from 'react';
+
+function App() {
+  const [count, setCount] = useState(0);
+  
+  const handle = () => {
+    const updatedCount = count + 1;
+    console.log(`Clicked ${updatedCount} times`);
+    setCount(updatedCount);
+  };
+
+  console.log('I rendered!');
+
+  return <button onClick={handle}>Click me</button>;
+}
+
+Open the demo and click the button. Each time you click, you will see in the console the message 'I rendered!' — meaning that each time the state is updated, the component re-renders.
+
+So, the 2 main differences between references and state:
+
+Updating a reference doesn’t trigger re-rendering, while updating the state makes the component re-render;
+The reference update is synchronous (the updated reference value is available right away), while the state update is asynchronous (the state variable is updated after re-rendering).
+From a higher point of view, references store infrastructure data of side-effects, while the state stores information that is directly rendered on the screen.
+
+we make a Stopwatch,
+now we know that , if we want to stop a setInterval , we need to clear it,
+and for that we need to assign setInterval to a varibale, in order to clear it later.
+
+In some cases, you might need to make JavaScript stop setInterval() from being executed before the times comes. You'll need to use the clearInterval() method. It's meant to stop the timer set by using the setInterval JavaScript function.
+
+The setInterval() returns a variable called an interval ID. You can then use it to call the clearInterval() function, as it's required by the syntax:
+
+function App() {
+  const timerRefID = useRef(0);
+  const [count, setCount] = useState(0)
+  
+  const startHandler = () => {
+    if(timerRefID.current !== 0) return; //if user clicks start in betwn ongoin timer
+    timerRefID.current = setInterval(() => {
+      setCount(c => c + 1)
+    }, 1000)
+  }
+
+   const stopHandler = () => {
+    clearInterval(timerRefID.current);
+    timerRefID.current = 0;
+  }
+
+  useEffect(() => {
+    clearInterval(timerRefID.current);
+  }, [])
+
+    return (
+      <div>
+        <div>Timer: {count}s</div>
+        <div>
+          <button onClick={startHandler}>Start</button>
+          <button onClick={stopHandler}>Stop</button>
+        </div>
+      </div>
+    );
+}
+
+so now we make a stop watch using useRef,
+where when the button clicks , we give the TimerRef's current property the the setInterval func, which runs the set the State after evert 1 sec
+
+now we'll say we can use useState too, but if you do, you cant assign a new value to it, when using useState. you need to update value using setState, right?
+The below code is wrong:
+let id = 0
+  const [count, setCount] = useState(0)
+  
+  const startHandler = () => {
+    id = setInterval(() => {
+      setCount(c => c + 1)
+    }, 1000)
+  }
+
+Now, you will say use just a normal variable, but as you know after every render the variable will get back the initial value, and now we cant clear the timeIntercal as we dont have a id now, right... so the intervel will keep runnin the callback func.
+
+NOw if you notice , we added a line :
+if(timerRefID.current !== 0) return;
+
+This means, lets say the timer is started and going on, and if we again press a start button, the behaivour doesnt change, and the timer continous.
+
+but if we remove that, and we click the start button on an ongoing timer, it will first give the timerefID a new value and add another setIntervel, which will run.
+Now a Qs arrises is that can we have mutilple settimeout? yes cause it calls a functions after every 1sec and after that emtis the stack, so , our other setIntervel basically will call its fun in the gap of the first setTimeintervel, and this will cause, weird behaivour, 
+
+But now if we go and stop the watch , we will only remove the intervel of the 2nd setIntervel func, as the id of the 1st which was saved got re-assgined as we clicked the start btn again.
+
+
+
+--------------------------------------------------
+Ref Attribute:
+refs is used to select/target HTML elements
+refs is like the document.querySelector('.el') in vanilla JS 
+
+https://stackoverflow.com/questions/46820981/what-are-refs-in-react
+
+Refs are a way to set a variable at a DOM element or a class component instance.
+There are two types of refs: callback refs, and object refs.
+
+Object Refs
+Object refs are created using useRef() or React.createRef().
+
+To use them (an example with a function component referencing a DOM element):
+
+Declare a "container" variable (which you will point at a DOM element in the next step) and set it equal to useRef(). This is your "ref object."
+
+Add a ref attribute to your DOM element. Set it equal to your ref object.
+
+Now this ref object represents the DOM element you pointed it at, and can be used to access its methods and properties.
+
+Callback Refs
+Callback refs function similarly, but allow more fine-grained control.
+
+To create a callback ref, you similarly add a ref attribute to your DOM element, but instead of passing in a ref object, you pass in a callback. This callback receives the element itself as the argument for the callback; you can then set it equal to an existing value (this.something in a class; an already-declared variable in a function component.)
+
+  <input
+  type='text'
+  ref={(input) => inputElement = input} // 1. so, here, `input` in the callback refers to the DOM element. Now, when the component mounts, `inputElement` will *reference* this DOM <input> element.
+  />
+
+Note that the callback will be called with null when the component unmounts.
+
+Why are they useful?
+They shouldn't be used often; they're meant as escape hatches. They allow you to access API methods (focus() is a common example) available on the actual html elements that may not be available on the React component. If this seems confusing, remember that a React button component, for example, is not the same as an html button component. You can call focus() on an html button element, but not on a React button element.
+
+-------------------------------------------------------
+
+
+useRef for DOM:
+
+Now we know that ref basically gives the variable we define, the element's reference, or in jS language, we assigned that elemtent to it and now we can do anything to that element, like classname etc, justlike a queryselector, right?
+
+
+---- Simply,
+so in react, ref attribute gives.refer the element/component to the refObj's current property which we created using useRef, and now we gave refObj.current = element. So now we can make changes tot hat element.
+
+function App() {
+  const elementRef = useRef();
+
+  useEffect(() => {
+    const divElement = elementRef.current;
+    console.log(divElement);
+  }, []);
+
+  return <div ref={elementRef}>I am an Element.</div>;
+}
+
+so , now the `divElement` variable, or elementRef.current have the refernce to div element, and can make changes to that element/component.
+
+Its just similar to js like we used to do const a = document.querySelector(), a got a reference to element, here obj.current got a reference, using ref attribute.
+
+
+
+Use case: focusing an input
+You would need to access DOM elements, for example, to focus on the input field when the component mounts.
+
+To make it work you’ll need to create a reference to the input, assign the reference to ref attribute of the tag, and after mounting call the special method element.focus() on the element.
+
+Here’s a possible implementation of the App component
+function App() {
+  const inputRef = useRef();
+
+  useEffect(() => {
+    inputRef.current.focus();
+  }, []);
+
+  return <input ref={inputRef} type="text"></input>;
+}
+
+
+Updating references restriction:
+The function scope of the functional component should either calculate the output ie. return somethin or invoke hooks.
+That’s why updating a reference (as well as updating state) shouldn’t be performed inside the immediate scope of the component’s function.
+
+The reference must be updated either inside a useEffect() callback or inside handlers (event handlers, timer handlers, etc).
+
+
+
+ just a custom hook:
+ export const useSkipFirstEffect = (func) => {
+  const renderCount = useRef(0);
+  if(renderCount.current === 0) {
+      useEffect(() => {})
+  } else {
+      useEffect(() => {
+          console.log(`useEffects log`);
+          func();
+      })
+  }
+
+  renderCount.current = 1;
+};
+
+
+
+useContext hook:
+to pass props , we can use context api by react, 
+Import createContext func,
+
+export const NameContext = createContext();
+
+const App = () => {
+  return (
+    <div>
+      <div>Hello</div>
+      <NameContext.Provider value = {'Jasmeet'}>
+        <Item />
+      </NameContext.Provider>
+    </div>
+  );
+};
+
+Item component:
+import { NameContext } from "./App";
+
+function Item() {
+  const name = useContext(NameContext);
+
+  return <div>{name}</div>;
+}
+
+
+Switch statement:
+
+
+we create functions and when we dont know the what data will come so we a lot of if..if-else statements, right , like:
+function activityByday() {
+  if(day === 'Monday){
+    return 'Walk'
+  }
+  else if(day === 'Tusday')
+    retun 'Play'
+}
+and so on.....
+
+But we can do this by switch statement, where the data which will switched in scenarios will be in switch(), and if statement will be displayed by case:
+
+const day = monday    //lets say hardcoded data
+
+switch(day) {
+  case 'monday':
+    return `Walk`
+    break;
+  case 'Tuesday':
+    return 'Play'
+    break;
+  case 'Wednesday:
+  case 'Thursday':
+    return 'Cook Food'
+  case 'friday':
+    return 'Clean Hoouse'
+}
+
+thats why we need break, if we dont, it will also run the other case, like in wedneday and thurday condition have the same return.
+
+
+
+Reduce:
+const arr = [1,2,3,4];
+const sum = arr.reduce((acc, curr, i) => {
+  return acc + curr
+}, 10)
+console.log(sum)
+it accepts 2 paramater, callbck func(also called as reducer method), initial value of accumulator(acc)
+//if we dont give the initial value to accumulator, it takes the first value of the array and and starts looping from second element i.e. from index 1.
+And whatever returned by reducer method is stored in acc in each iteration(ie acc value gets updated).
+So the reduce method reduces them down to single value and returns it
+
+const arr = [13, 89, 102, 33]
+const bigNumber = arr.reduce((acc, curr, i) => {
+  return curr > acc ? curr : acc
+}, 0)
+
+
+useReducer Hook: 
+GFG:-
+It used for state managements like useSTate and is similar to the reduce methood
+prev: update the state directly using setState
+now updating with usereducer
+setState(action)
+reducer , ok action is this, do this to current state. by returning something from that reducer func (using switch statements)
+
+prev, setState func used to directly execute the action on current state, now setState updates what action needs to be done , and reducer observes that action change and updates the state
+
+import React, { useReducer, useState } from "react";
+
+const initialState = 0;
+const reducer = (state, action) => {
+  switch (action) {
+    case "add":
+      return state + 1;
+      break;
+    case "subtract":
+      return state - 1;
+      break;
+    case "reset":
+      return initialState;
+      break;
+    default:
+      return state;
+  }
+};
+
+const App = () => {
+  const [count, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <div>
+      <h2>{count}</h2>
+      <button onClick={() => dispatch("add")}>+</button>
+      <button onClick={() => dispatch("subtract")}>-</button>
+      <button onClick={() => dispatch("reset")}>reset</button>
+    </div>
+  );
+};
+
+
+
+useReducer :
+A hook used for state management.
+useReducer is related to JS reducer functions.
+hook take 2 args: useReducer(reducer, initialState)
+callback func takes 2 args: reducer(currentState, action)
+
+so whatever the callback is returning, will be the current state.
+
+useReducer hook returns an array, the current value of the state i.e count value, and a dispactch function which is capable of accepting a action to execute the code specified in reducer method.
+we use this displatch method to dispatch the appropiate action based on what button the user clicks, the action re-triggers the state transition when the state changes the component re-render and the correct value is displayed in browser.
+
+it's like when the dispatch func is called, the action is supplied to useReducer hook which observes the change and returns updated value which updates the current state and re-rendering the component to display the correct value.
+
+
+About component, A component are independent, ie, you can use all hooks, just like App.js. App.js is just another hook, right? So putting all the counter in a coponent and using that comp in the App.js.
+
+
+UseReducer Obj Example:
+Using state obj and action action . Also a pattern similar to redux users.
+
+count = initialState = {firstCounter: 0};
+so count = obj;
+so count.firstCounter;
+
+const initialState = {
+  firstCounter: 0,
+};
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "increment":
+      return { firstCounter: state.firstCounter + 1 };
+      break;
+    case "decrement":
+      return { firstCounter: state.firstCounter - 1 };
+      break;
+    case "reset":
+      return initialState;
+      break;
+    default:
+      return state;
+  }
+};
+
+const Counter2Obj = () => {
+  const [count, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <div>
+      <h2>{count.firstCounter}</h2>
+      <button onClick={() => dispatch({ type: "increment" })}>+</button>
+      <button onClick={() => dispatch({ type: "decrement" })}>-</button>
+      <button onClick={() => dispatch({ type: "reset" })}>reset</button>
+    </div>
+  );
+};
+
+-------------------
+What is the advantage of using this particular pattern?
+there can be 2 scenarios where this can be helpfull.
+
+1) the first scenario is concerning the value by which we need to increment and decrement the counter, what if we wanted to add two more button that could increase , decrease the value by 5, that can be easy when action is a object, currently the action obj  have only one property that is type, we can add a seconf propert `value` to increment or decrement the btn
+
+by making use of action as obj, we can use additional data in the reducer func.
+
+const initialState = {
+  firstCounter: 0,
+};
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "increment":
+      return { firstCounter: state.firstCounter + action.value };
+      break;
+    case "decrement":
+      return { firstCounter: state.firstCounter - action.value };
+      break;
+    case "reset":
+      return initialState;
+      break;
+    default:
+      return state;
+  }
+};
+
+const Counter2Obj = () => {
+  const [count, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <div>
+      <h2>{count.firstCounter}</h2>
+      <button onClick={() => dispatch({ type: "increment", value: 1 })}>
+        +
+      </button>
+      <button onClick={() => dispatch({ type: "decrement", value: 1 })}>
+        -
+      </button>
+      <button onClick={() => dispatch({ type: "increment", value: 5 })}>
+        Increase by 5
+      </button>
+      <button onClick={() => dispatch({ type: "decrement", value: 5 })}>
+        Decrease by 5
+      </button>
+      <button onClick={() => dispatch({ type: "reset" })}>reset</button>
+    </div>
+  );
+};
+
+
+
+2) In the second scenario, we will talk abt state as obj, lets say you wanted to maintain 2 different counters, which will become easy when we have state as a obj
+we simply add other property to our state
+
+const initialState = {
+  firstCounter: 0,
+  secondCounter: 10
+};
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "increment":
+      return { ...state ,firstCounter: state.firstCounter + action.value };
+      break;
+    case "decrement":
+      return { ...state, firstCounter: state.firstCounter - action.value };
+      break;
+    case "increment2":
+      return { ...state, secondCounter: state.secondCounter + action.value };
+      break;
+    case "decrement2":
+      return { ...state, secondCounter: state.secondCounter - action.value };
+      break;
+    case "reset":
+      return initialState;
+      break;
+    default:
+      return state;
+  }
+};
+
+const Counter2Obj = () => {
+  const [count, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <div>
+      <h2>{count.firstCounter}</h2>
+      <button onClick={() => dispatch({ type: "increment", value: 1 })}>
+        +
+      </button>
+      <button onClick={() => dispatch({ type: "decrement", value: 1 })}>
+        -
+      </button>
+      <button onClick={() => dispatch({ type: "increment", value: 5 })}>
+        Increase by 5
+      </button>
+      <button onClick={() => dispatch({ type: "decrement", value: 5 })}>
+        Decrease by 5
+      </button>
+      <button onClick={() => dispatch({ type: "reset" })}>reset</button>
+
+      <div>
+        <h2>{count.secondCounter}</h2>
+        <button onClick={() => dispatch({ type: "increment2", value: 1 })}>
+          increace by 2
+        </button>
+        <button onClick={() => dispatch({ type: "decrement2", value: 1 })}>
+          decrease by 2
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
+as we know when we need to update/change property/properties of obj which is a state, we need to use spread operator as the propert we changes need to there with the old properties,
+
+now this approach of maitaining multople varibales in single state obj is suited when dealing with global state, but now we are dealing with local state.
+
+
+ 
+Multiple useReducers: (counter 3)
+when dealing with multiple state variable that have same state transition, its a good idea to have multiple useReducer making use of same reducer function , thhis will aviod complesity of merging the state if it were a obj and also prevents us from duplicating code in reducer func, as seen in counter 2
+
+
+So far we have examples of usereduceer for local state management ie at component level. but at some point u might want to share state betwn components, wich means you have to work with global state, we can manage glocalstate bu combinig,
+
+
+
+Dispatch function changes the state of action which triggers the reducer func to return something , and all this causes re-render.
+
+So when we want to change the state of something from other component... , in the useState era, we used to make a func in app component which used to update the state, 
+in useReducer era we give the dispatch function , cause that updates the action, which inplace triggers the reducer func and the page re-renders.
+
+
+
+Fetching data with userReducer:
+as we know dispatch function dispatchs an action to the reducer hook, and the data(action) is usefull to render based on conditions we made for the incoming data. so when we get the data from axios we dispatch a obj ,properties like success, and response_data, in the the reducer hook , we set condition if succes then do this, and we use the action response data to show content.
+
+
+
+useState vs reducer, What to use when?
+
+both of them is meant for state management
+
+1) Type of state: when you are trying to manage primitive types like Number, String, Boolean, useState is a better option , if u r going to manage a obj or array useReducer is better suited.
+2) Number of state transitions: i updating 1-2 state varibale useSTate is fine, but when u start seeing 5-10 setState calls you should consider moving the logic to reducer func. The reason is it makes your state transition predictble, you will be updating several state varibale and all will be hapening in one place ie reducer function.
+3) how related the state transitions are/ : In the prev exercise, we saw how to fetch data with reducer hook , there were only 3 state varibale, loading, post and error, typically u would want to manage this with useState, however useReducer will be more related as the same transition are all related are tied to a specific action. All 3 variable are updated together whether the data is fetched successfully or not.
+by making use of usereducer, code is more predictable and maintainable
+4)Local vs Global : if u want to maintain local component state useState is great option, however if u want to maintain global state which can be altered by the components deep in components tree, useReducer is a great option .
+
+using useReducer over useState have a simple advantage, with useReducer we simply have to pass one dispatch method down the compoennt tree, that one state dispacth method can update several state varibale based on action type, with useState we would have pass down multiple update functions , 1 for each state.
+
+
+
+reducer function : you should  see the reducer function like, it it takes the old state and action and spits back the new state, 
+
+In other components i will just use the functions, now that functions can be used to dispatch, setState stuff.
+
+
+
+PropTypes:
+
+there are times when we are mapping an object, there are some missing properties in few items, in that case react throws an error, but bwe can check the propertie and set some value for it, incase of some problem 
+eg. product is a component
+
+Product.propTypes = {
+  image: PropTypes.object.isRequired,
+  name: ....
+}
+
+isRequired , logs and tells us the error. so its important to knw whats happening.
+
+Product.defaultProps = {
+  name: 'default name
+}
+
+so lets say if something is not there, we can give a default name, and the app will run smoothly.
+
+
+
+React Router:
+
+We wrap all the component in router, and create a route for each component.
+
+So now we create a navbar.
+Now just going on the link is not the best user experience , so we make nav bar which has links for navigation.
+
+Now in navbar we use the link compoennt, which helps us to link the name to the path, which takes us to the compoennt, ie the component loads.
+
+Link component is just like a normal component or element which, will work for router to display a stuff and 
+Router basically routes the component, and link takes us to route created by router
+
+
+now links are acting like conditions, when there is this link , show this component.
+
+as said route is ajust a element, and we know they have props, and children is nothing but whats inside the element.
+
+so the use of params,
+Abhi component link se render hora, so react got a solution to know the params or parameter, so if such link is there show this component, right? so we can get the data like id from the link, using useParams function.
+It gives the parameters of the link so the component can use it and filter the particular item based on selection.
+
+
+React Memo:
+
+Memo is function in react, basically it checks that if the component's props have been changed, then render, if the props data is not changes then dont re-render the component.
+
+
